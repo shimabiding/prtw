@@ -7,6 +7,8 @@ $fileName
 $refAssem = @(
 "System.Data"
 ".\bin\Npgsql.dll"
+"UIAutomationTypes"
+".\bin\UIAutomationClient.dll"
 )
 
 Add-Type -Path $fileName".cs" `

@@ -1,32 +1,76 @@
 using Npgsql;
 using System.Data;
+using System;
+using System.Windows.Automation;
 
 namespace wrapper{
 
 class program{
     static void Main(string[] args){
-        var query = GenSqlID();
+		while(true){
+		System.Console.Write("Input detail_id on this line: ");
+		var id = System.Console.ReadLine();
+		if(id.Length != 6) {
+			System.Console.WriteLine("Missing length");
+			continue;
+		}
+        var query = GenSqlID(id); //123417
         var conn_str = "Server=localhost;Port=5432;Database=postgres;UserID=postgres;";
 
 		using(var conn = new NpgsqlConnection(conn_str)){
 			conn.Open();
             using(var cmd = new NpgsqlCommand(query, conn)){
-                var res = cmd.ExecuteReader();
+                var m ="";
+				var j ="";
+				NpgsqlDataReader res = null;
 
-				while(res.Read()){
-            		System.Console.Write(res["job_seq"]+", ");
-            		System.Console.Write(res["deliv"]+", ");
-            		System.Console.Write(res["mngcode"]+", ");
-            		System.Console.WriteLine(res["subj"]);
+				try {
+					System.Console.WriteLine(id);
+					res = cmd.ExecuteReader();
+					System.Console.WriteLine("Execute後");
+				}
+				catch(Exception e){
+					System.Console.WriteLine(e.Message);
+					continue;
+				}
+
+				System.Console.WriteLine(res.HasRows);
+				if(!res.HasRows) System.Console.WriteLine("not found");
+				else {
+					System.Console.WriteLine("DB returned {0} result what is SELECT", res.HasRows);
+					while(res.Read()) {
+						m = res["mngcode"].ToString();
+						j = res["job_seq"].ToString();
+						
+            			System.Console.Write(m + ", ");
+						System.Console.Write(j + ", ");
+						System.Console.Write(res["deliv"]+", ");
+            			System.Console.WriteLine(res["subj"]);
+					}
+
+					var inputText = m + "-" + j;
+
+					System.Console.WriteLine(inputText);
+					
+					var aui = new AutomationUI();
+					try {
+						AutomationElement tw = aui.FindWindowByName("beInput");
+						if(tw == null) return;
+						AutomationElement te = aui.FindElementByAutomationId(tw, "textBox111");
+						if(te == null) return;
+						aui.SetTextToElement(te, inputText);
+					}
+					catch(Exception ex) {
+						System.Console.WriteLine(ex.Message);
+					}
         		}
-				System.Console.ReadLine();
             }
         }
-        
-        
+
+		}
     }
 
-    static string GenSqlID() {
+    static string GenSqlID(string id) {
         var query = @"
 SELECT
 	a.mngcode,
@@ -39,7 +83,9 @@ SELECT
 FROM (
 	SELECT *
 	FROM a
-	WHERE orderid = 123417
+	WHERE orderid = "
++id
++ @"
 	)a
 
 INNER JOIN (
@@ -61,6 +107,33 @@ INNER JOIN (
 	ON b.cusid = d.cusid
 ";
 		return query;
+    }
+}
+
+class AutomationUI {
+	public AutomationElement FindWindowByName(string name) {
+        return AutomationElement.RootElement.FindFirst(
+            TreeScope.Children,
+            new PropertyCondition(AutomationElement.NameProperty, name));
+    }
+
+    public AutomationElement FindElementByAutomationId(AutomationElement parent, string id) {
+        return parent.FindFirst(
+            TreeScope.Descendants,
+            new PropertyCondition(AutomationElement.AutomationIdProperty, id));
+    }
+
+    public void SetTextToElement(AutomationElement element, string text) {
+        try {
+            var vp = element.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
+            if (vp == null) return;
+			var f = AutomationElement.FocusedElement;
+            vp.SetValue(text);
+			f.SetFocus();
+        }
+        catch (Exception e) {
+            Console.WriteLine(e.Message);
+        }
     }
 }
 

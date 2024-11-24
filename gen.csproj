@@ -20,10 +20,9 @@
     <Reference Include="System.Windows.Forms"/>
     <Reference Include="System.Xml"/>
     <Reference Include="Npgsql"/>
+    <Reference Include="System.Windows.Automation">
   </ItemGroup>
   <ItemGroup>
-    <PackageReference Include="Npgsql" Version="4.1.14"/>
-    <PackageReference Include="System.Runtime.CompilerServices.Unsafe" Version="4.5.3"/>
-    <PackageReference Include="System.Threading.Tasks.Extensions" Version="4.5.4"/>
+
   </ItemGroup>
 </Project>
