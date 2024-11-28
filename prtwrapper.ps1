@@ -5,12 +5,13 @@ $fileName = $fileName.Remove($fileName.LastIndexOf('.'))
 $fileName
 
 $refAssem = @(
-"System.Data"
-".\bin\Npgsql.dll"
-"UIAutomationTypes"
-".\bin\UIAutomationClient.dll"
+    "System.Data"
+    ".\bin\Npgsql.dll"
+    "UIAutomationTypes"
+    "UIAutomationClient"
 )
 
-Add-Type -Path $fileName".cs" `
--OutputAssembly .\bin\$fileName".exe" `
--ReferencedAssemblies $refAssem
+Add-Type `
+    -Path $fileName".cs" `
+    -OutputAssembly .\bin\$fileName".exe" `
+    -ReferencedAssemblies $refAssem
