@@ -12,56 +12,68 @@ namespace wrapper
         {
             while (true)
             {
-                System.Console.Write("Input detail_id on this line: ");
+                System.Console.Write("Input detail_id on this line: "); //WP231006
                 var id = System.Console.ReadLine();
-                if (id.Length != 6)
+                if (id.Length != 8)
                 {
                     System.Console.WriteLine("Missing length");
-                    continue; //長さが6以外のときidのReadLineまで戻る
+                    continue; //長さが8以外のときidのReadLineまで戻る
                 }
-                var query = GenSqlID(id); //123417
-                var conn_str = "Server=localhost;Port=5432;Database=postgres;UserID=postgres;";
+                var query = GenSqlID();
+                var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;";
 
                 using (var conn = new NpgsqlConnection(conn_str))
                 {
-                    conn.Open();
+                    try
+                    { conn.Open(); }
+                    catch (Exception ex)
+                    { System.Console.WriteLine(ex.Message); }
+
                     using (var cmd = new NpgsqlCommand(query, conn))
                     {
-                        var m = "";
-                        var j = "";
+                        var _c = cmd.Parameters.AddWithValue("inputid", id);
                         NpgsqlDataReader res = null;
 
                         try
                         {
-                            System.Console.WriteLine(id);
                             res = cmd.ExecuteReader();
-                            System.Console.WriteLine("Execute後");
                         }
                         catch (Exception e)
                         {
                             System.Console.WriteLine(e.Message);
-                            continue; //存在しない
+                            continue;
                         }
 
-                        System.Console.WriteLine(res.HasRows);
                         if (!res.HasRows) System.Console.WriteLine("not found");
                         else
                         {
+                            var o = "";
+                            var obefore = "";
+                            var work_status = "";
+                            var dept_id = "";
+                            var dept_idbefore = "";
+
                             System.Console.WriteLine("DB returned {0} result what is SELECT", res.HasRows);
                             while (res.Read())
                             {
-                                m = res["mngcode"].ToString();
-                                j = res["job_seq"].ToString();
+                                o = res["order_detail_id"].ToString();
+                                work_status = res["work_status"].ToString();
 
-                                System.Console.Write(m + ", ");
-                                System.Console.Write(j + ", ");
-                                System.Console.Write(res["deliv"] + ", ");
-                                System.Console.WriteLine(res["subj"]);
+                                if (work_status == "1")
+                                {
+                                    dept_id = res["dept_id"].ToString();
+                                    if (dept_idbefore == dept_id || dept_idbefore == "")
+                                    {
+                                        dept_idbefore = dept_id;
+                                        obefore = o;
+                                        continue;
+                                    }
+                                    else { break; }
+                                }
                             }
 
-                            var inputText = m + "-" + j;
-
-                            System.Console.WriteLine(inputText);
+                            var resid = obefore;
+                            System.Console.WriteLine(resid);
 
                             var aui = new AutomationUI();
                             try
@@ -70,7 +82,7 @@ namespace wrapper
                                 if (tw == null) return;
                                 AutomationElement te = aui.FindElementByAutomationId(tw, "textBox111");
                                 if (te == null) return;
-                                aui.SetTextToElement(te, inputText);
+                                aui.SetTextToElement(te, resid);
                             }
                             catch (Exception ex)
                             {
@@ -82,42 +94,21 @@ namespace wrapper
             }
         }
 
-        static string GenSqlID(string id)
+        static string GenSqlID()
         {
             var query = @"
-SELECT
-    a.mngcode,
-    a.subnum,
-    b.subj,
-    c.C_amount,
-    c.deliv,
-    c.job_seq,
-    d.cus_name
-FROM (
-    SELECT *
-    FROM a
-    WHERE orderid = "
-    + id
-    + @"
-    )a
-
-INNER JOIN (
-    SELECT *
-    FROM b
-    )b
-    ON a.bid = b.bid
-
-INNER JOIN (
-    SELECT *
-    FROM c
-    )c
-    ON a.bid = c.bid
-
-INNER JOIN (
-    SELECT *
-    FROM d
-    )d
-    ON b.cusid = d.cusid
+SELECT *
+FROM a
+    INNER JOIN (
+        SELECT *
+        FROM b
+        WHERE del_flg = 0
+    ) AS b
+ON a.order_id = b.order_id
+WHERE a.voucher_nid = @inputid
+    AND a.order_no = 2
+    AND a.del_flg = 0
+ORDER BY job_seq ASC
 ";
             return query;
         }
