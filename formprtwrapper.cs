@@ -18,29 +18,19 @@ namespace wp
                 System.Console.Write("Input voucher_id to this line: ");
                 string inputID = GetValidatedInput(System.Console.ReadLine());
                 if (null == inputID) continue;
-
                 using (var conn = CreateDatabaseConnection())
                 {
                     if (null == conn) continue;
                     var result = ExecuteQueryAndGetResult(conn, inputID);
-                    if (null != result)
-                    {
-                        UpdateUserInterface(result, "beInput", "textBox111");
-                    }
-                    else
-                    {
-                        System.Console.WriteLine("Not found");
-                    }
+                    if (null != result) UpdateUserInterface(result, "beInput", "textBox111");
+                    else System.Console.WriteLine("Not found");
                 }
             }
         }
 
         public static string GetValidatedInput(string id)
         {
-            if (Regex.IsMatch(id, @"^WP\d{6}"))
-            {
-                return id;
-            }
+            if (Regex.IsMatch(id, @"^WP\d{6}")) return id;
             else
             {
                 System.Console.WriteLine("This input is missing type");
@@ -52,10 +42,7 @@ namespace wp
         {
             var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;";
             var conn = new NpgsqlConnection(conn_str);
-            try
-            {
-                conn.Open();
-            }
+            try { conn.Open(); }
             catch (Exception ex)
             {
                 System.Console.WriteLine("Can't open a database: {0}", ex.Message);
@@ -72,10 +59,7 @@ namespace wp
             {
                 cmd.Parameters.AddWithValue("inputID", id);
 
-                try
-                {
-                    reader = cmd.ExecuteReader();
-                }
+                try { reader = cmd.ExecuteReader(); }
                 catch (Exception ex)
                 {
                     System.Console.WriteLine(ex.Message);
@@ -110,18 +94,15 @@ namespace wp
 
         public static void UpdateUserInterface(string result, string name, string id)
         {
-            var WINDOWNAME = name;
-            var AUTOMATIONID = id;
-
             try
             {
                 var targetWindow = AutomationElement.RootElement.FindFirst(
                     TreeScope.Children,
-                    new PropertyCondition(AutomationElement.NameProperty, WINDOWNAME)
+                    new PropertyCondition(AutomationElement.NameProperty, name)
                 );
                 var targetElement = targetWindow.FindFirst(
                     TreeScope.Descendants,
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, AUTOMATIONID)
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, id)
                 );
 
                 var vp = targetElement.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
@@ -132,10 +113,7 @@ namespace wp
                     f.SetFocus();
                 }
             }
-            catch (Exception ex)
-            {
-                System.Console.WriteLine(ex.Message);
-            }
+            catch (Exception ex) { System.Console.WriteLine(ex.Message); }
         }
 
         static string QueryWP()
