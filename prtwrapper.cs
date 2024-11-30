@@ -31,7 +31,7 @@ namespace wrapper
 
                     using (var cmd = new NpgsqlCommand(query, conn))
                     {
-                        var _c = cmd.Parameters.AddWithValue("inputid", id);
+                        var _c = cmd.Parameters.AddWithValue("inputid", id); //net472では _ = cmd.Para…と書けない　ので、代替　
                         NpgsqlDataReader res = null;
 
                         try
