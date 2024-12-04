@@ -15,25 +15,33 @@ namespace wp
 
             while (true)
             {
-                System.Console.Write("Input voucher_id to this line: ");
-                string inputID = GetValidatedInput(System.Console.ReadLine());
+                System.Console.Write("Input order_id to this line: ");
+                var inputID = GetValidatedInput(System.Console.ReadLine());
                 if (null == inputID) continue;
                 using (var conn = CreateDatabaseConnection())
                 {
                     if (null == conn) continue;
                     var result = ExecuteQueryAndGetResult(conn, inputID);
-                    if (null != result) UpdateUserInterface(result, "beInput", "textBox111");
-                    else System.Console.WriteLine("Not found");
+                    if (null == result) System.Console.WriteLine("Not found");
+                    else UpdateUserInterface(result);
                 }
             }
         }
 
-        public static string GetValidatedInput(string id)
+        public static string GetValidatedInput(string s)
         {
-            if (Regex.IsMatch(id, @"^WP\d{6}")) return id;
+            if (16 == s.Length)
+            {
+                var m = Regex.Match(s, @"^WP(\d{11})\d{3}");
+                if (m.Success) return m.Groups[1].Value;
+                else {
+                    System.Console.WriteLine("This input is missing type");
+                    return null;
+                }
+            }
             else
             {
-                System.Console.WriteLine("This input is missing type");
+                System.Console.WriteLine("This input is missing length");
                 return null;
             }
         }
@@ -57,7 +65,7 @@ namespace wp
             NpgsqlDataReader reader = null;
             using (var cmd = new NpgsqlCommand(query, conn))
             {
-                cmd.Parameters.AddWithValue("inputID", id);
+                cmd.Parameters.AddWithValue("inputID", int.Parse(id));
 
                 try { reader = cmd.ExecuteReader(); }
                 catch (Exception ex)
@@ -68,8 +76,8 @@ namespace wp
             }
             if (reader.HasRows)
             {
-                string PrevID = "";
-                string PrevDeptID = "";
+                string prevDeptID = "";
+                string prevID = "";
 
                 while (reader.Read())
                 {
@@ -77,32 +85,34 @@ namespace wp
                     if ("1" == workStatus)
                     {
                         string deptID = reader["dept_id"].ToString();
-                        string ID = reader["order_detail_id"].ToString();
+                        string id = reader["order_detail_id"].ToString();
 
-                        if (deptID == PrevDeptID || string.IsNullOrEmpty(PrevDeptID))
+                        if (deptID == prevDeptID || string.IsNullOrEmpty(prevDeptID))
                         {
-                            PrevDeptID = deptID;
-                            PrevID = ID;
+                            prevDeptID = deptID;
+                            prevID = id;
                         }
                         else break;
                     }
                 }
-                return PrevID;
+                return prevID;
             }
             else return null;
         }
 
-        public static void UpdateUserInterface(string result, string name, string id)
+        public static void UpdateUserInterface(string result)
         {
+            var TARGETNAME = "beInput";
+            var TARGETID = "textBox111";
             try
             {
                 var targetWindow = AutomationElement.RootElement.FindFirst(
                     TreeScope.Children,
-                    new PropertyCondition(AutomationElement.NameProperty, name)
+                    new PropertyCondition(AutomationElement.NameProperty, TARGETNAME)
                 );
                 var targetElement = targetWindow.FindFirst(
                     TreeScope.Descendants,
-                    new PropertyCondition(AutomationElement.AutomationIdProperty, id)
+                    new PropertyCondition(AutomationElement.AutomationIdProperty, TARGETID)
                 );
 
                 var vp = targetElement.GetCurrentPattern(ValuePattern.Pattern) as ValuePattern;
@@ -113,23 +123,18 @@ namespace wp
                     f.SetFocus();
                 }
             }
-            catch (Exception ex) { System.Console.WriteLine(ex.Message); }
+            catch (NullReferenceException) { System.Console.WriteLine("出力先ソフトが未起動"); }
+            catch (Exception ex) { System.Console.WriteLine(ex); }
+            
         }
 
         static string QueryWP()
         {
             var query = @"
 SELECT *
-FROM a
-    INNER JOIN (
-        SELECT *
-        FROM b
-        WHERE del_flg = 0
-    ) AS b
-    ON a.order_id = b.order_id
-WHERE a.voucher_nid = @inputID
-    AND a.order_no = 2
-    AND a.del_flg = 0
+FROM abcd
+WHERE abcd.order_id = @inputID
+    AND abcd.del_flg = 0
 ORDER BY job_seq ASC
 ";
             return query;

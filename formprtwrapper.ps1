@@ -16,4 +16,5 @@ $refAssem = @(
 Add-Type `
     $fileName".cs", .\wrapperForm.cs `
     -OutputAssembly .\bin\$fileName".exe" `
-    -ReferencedAssemblies $refAssem
+    -ReferencedAssemblies $refAssem <#`
+    -OutputType WindowsApplication#>
