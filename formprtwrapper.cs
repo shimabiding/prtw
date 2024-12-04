@@ -22,7 +22,8 @@ namespace wp
                 {
                     if (null == conn) continue;
                     var result = ExecuteQueryAndGetResult(conn, inputID);
-                    if (null == result) System.Console.WriteLine("Not found");
+                    if (null == result) continue;
+                    result = "aa" + result + "aaa";
                     else UpdateUserInterface(result);
                 }
             }
@@ -97,7 +98,10 @@ namespace wp
                 }
                 return prevID;
             }
-            else return null;
+            else {
+                System.Console.WriteLine("Not found");
+                return null;
+            }
         }
 
         public static void UpdateUserInterface(string result)
