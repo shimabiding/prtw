@@ -9,9 +9,12 @@ $refAssem = @(
     ".\bin\Npgsql.dll"
     "UIAutomationTypes"
     "UIAutomationClient"
+    "System.Windows.Forms"
+    "System.Drawing"
 )
 
 Add-Type `
     -Path $fileName".cs" `
     -OutputAssembly .\bin\$fileName".exe" `
-    -ReferencedAssemblies $refAssem
+    -ReferencedAssemblies $refAssem <#`
+    -OutputType WindowsApplication#>
