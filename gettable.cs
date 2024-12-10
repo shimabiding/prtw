@@ -9,7 +9,7 @@ namespace Name
     {
         static void Main(string[] args)
         {
-            var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;";
+            var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;Password=;";
             var query = GenSql();
 
             using (var conn = new NpgsqlConnection(conn_str))
@@ -55,6 +55,8 @@ namespace Name
 SELECT *
 FROM abcd
 WHERE order_id = 00000000006
+    AND del_flg = 0
+ORDER BY job_seq ASC
 ";
         }
     }

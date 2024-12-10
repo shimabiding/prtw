@@ -24,7 +24,7 @@ namespace wp
                     var result = ExecuteQueryAndGetResult(conn, inputID);
                     if (null == result) continue;
                     result = "aa" + result + "aaa";
-                    else UpdateUserInterface(result);
+                    UpdateUserInterface(result);
                 }
             }
         }
@@ -33,7 +33,7 @@ namespace wp
         {
             if (16 == s.Length)
             {
-                var m = Regex.Match(s, @"^WP(\d{11})\d{3}");
+                var m = Regex.Match(s, @"^WP(\d{11})\d{3}", RegexOptions.IgnoreCase);
                 if (m.Success) return m.Groups[1].Value;
                 else {
                     System.Console.WriteLine("This input is missing type");
@@ -49,7 +49,7 @@ namespace wp
 
         public static NpgsqlConnection CreateDatabaseConnection()
         {
-            var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;";
+            var conn_str = "Server=localhost;Port=5432;Database=mng;UserID=postgres;Password=;";
             var conn = new NpgsqlConnection(conn_str);
             try { conn.Open(); }
             catch (Exception ex)
@@ -60,13 +60,13 @@ namespace wp
             return conn;
         }
 
-        public static string ExecuteQueryAndGetResult(NpgsqlConnection conn, string id)
+        public static string ExecuteQueryAndGetResult(NpgsqlConnection conn, string inputID)
         {
             var query = QueryWP();
             NpgsqlDataReader reader = null;
             using (var cmd = new NpgsqlCommand(query, conn))
             {
-                cmd.Parameters.AddWithValue("inputID", int.Parse(id));
+                cmd.Parameters.AddWithValue("inputID", int.Parse(inputID));
 
                 try { reader = cmd.ExecuteReader(); }
                 catch (Exception ex)
